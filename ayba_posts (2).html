@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AYBA • Posts</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#2c2e33;
+      --ink:#e9ddc3;
+      --border:#c9bfa4;
+      --btn-bg:#e9ddc3;
+      --btn-ink:#1b1c20;
+      --px:2px; /* thin pixel borders */
+      --accent:#9bdcf1;
+      --ok:#a4f3c1;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; color:var(--ink);
+      font-family:"Press Start 2P", system-ui, monospace;
+      font-size:14px; /* smaller text globally */
+      line-height:1.4; letter-spacing:.2px;
+      image-rendering: pixelated;
+      background-image:
+        conic-gradient(from 45deg, #2b2d31 90deg, #26282c 0 180deg, #2b2d31 0 270deg, #26282c 0),
+        radial-gradient(ellipse at top, #3d4046 0%, #222326 60%);
+      background-size: var(--px) var(--px), auto;
+      background-attachment: fixed, fixed;
+    }
+
+    .shell{ height:100dvh; max-width:680px; margin:0 auto; display:grid; grid-template-rows:auto 1fr auto; }
+
+    header{
+      display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:6px;
+      border-bottom: var(--px) solid var(--border);
+      background:transparent;
+      box-shadow: inset 0 0 0 var(--px) #1a1b1f;
+    }
+    .logo{font-size:26px; animation: glitch 1s infinite alternate; position:relative; justify-self:center; }
+    .hdrBtn{
+      font-size:10px; cursor:pointer; color:var(--ink);
+      background:#2b2d31; padding:4px 8px; height:28px; line-height:1;
+      border: var(--px) solid var(--border);
+      box-shadow: inset 0 0 0 var(--px) #1a1b1f, 0 var(--px) 0 rgba(0,0,0,.35);
+    }
+    #logout{justify-self:start;}
+    #about{justify-self:end;}
+
+    @keyframes glitch {
+      0% { text-shadow:2px 0 red, -2px 0 cyan; }
+      20% { text-shadow:-2px 0 red, 2px 0 cyan; }
+      40% { text-shadow:2px 2px red, -2px -2px cyan; }
+      60% { text-shadow:-2px -2px red, 2px 2px cyan; }
+      80% { text-shadow:2px -2px red, -2px 2px cyan; }
+      100% { text-shadow:0 0 red, 0 0 cyan; }
+    }
+
+    .feed{ padding:8px; overflow:auto; display:flex; flex-direction:column; gap:12px }
+
+    .post{ padding:8px; border: var(--px) solid var(--border); background:#2b2d31;
+      font-size:14px; /* smaller text in posts */
+      box-shadow: inset 0 0 0 var(--px) #1a1b1f, 0 var(--px) 0 rgba(0,0,0,.35);
+      word-wrap:break-word; overflow-wrap:break-word; }
+    .post p{ margin:0; white-space:pre-wrap; word-wrap:break-word; overflow-wrap:break-word; }
+    .meta{ font-size:9px; color:#9aa4b2; margin-bottom:4px }
+    .grid{ display:grid; gap:6px; margin-top:6px; grid-template-columns: repeat(auto-fill, minmax(120px,1fr)); }
+    .grid img{ width:100%; height:140px; object-fit:cover; border: var(--px) solid var(--border); cursor:zoom-in }
+
+    /* Composer fixed bottom, opaque, only top border */
+    .composer{ position:fixed; left:0; right:0; bottom:0; z-index:20;
+      padding:6px; border-top: var(--px) solid var(--border);
+      background:#2b2d31; /* opaque */
+      box-shadow: inset 0 0 0 var(--px) #1a1b1f;
+      border-left:none; border-right:none; border-bottom:none; border-radius:0; }
+
+    .row{ display:flex; gap:4px; align-items:center; }
+    .ta{ flex:1; height:36px; font:inherit; font-size:14px; color:var(--ink);
+      background:#1f2023; padding:4px 6px; border: var(--px) solid var(--border);
+      resize:none; }
+    .btn{ flex:0 0 auto; width:30px; height:30px; font-size:12px; color:var(--btn-ink); background:var(--btn-bg);
+      border: var(--px) solid var(--border); cursor:pointer;
+      display:flex; align-items:center; justify-content:center; }
+    .btn#publish::before{ content:"↑"; }
+
+    .previews{ display:flex; gap:6px; padding:6px 0; flex-wrap:wrap }
+    .chip{ display:flex; align-items:center; gap:6px; padding:6px 8px; font-size:10px; background:#2b2d31; border: var(--px) solid var(--border) }
+    .chip img{ width:36px; height:36px; object-fit:cover; border: var(--px) solid var(--border) }
+    .chip .x{ cursor:pointer; border: var(--px) solid var(--border); padding:0 6px; height:22px }
+
+    .rec{ display:none; align-items:center; gap:8px; font-size:10px; color:#1b1c20; background:var(--ok); padding:6px 10px; margin-top:6px }
+    .rec .dot{ width:10px; height:10px; background:#d40000; animation: blink 1s infinite steps(1); }
+    @keyframes blink { 50% { opacity:.3 } }
+
+    .lightbox{ position:fixed; inset:0; background:rgba(0,0,0,.75); display:none; align-items:center; justify-content:center; padding:16px; }
+    .lightbox img{ max-width:90vw; max-height:85vh; border: var(--px) solid var(--border) }
+
+    /* Pixel audio card (compact) */
+    .audioCard{ margin-top:6px; padding:8px; background:#2b2d31;
+      border: var(--px) solid var(--border);
+      box-shadow: inset 0 0 0 var(--px) #1a1b1f, 0 var(--px) 0 rgba(0,0,0,.35);
+      display:flex; align-items:center; gap:8px; }
+    .audioBtn{ width:30px; height:30px; display:grid; place-items:center; cursor:pointer;
+      background:var(--btn-bg); color:var(--btn-ink);
+      border: var(--px) solid var(--border); }
+    .bar{ flex:1; height:10px; border: var(--px) solid var(--border); background:#22262b; position:relative }
+    .fill{ position:absolute; inset:0 auto 0 0; width:0%; background:linear-gradient(90deg, #e9ddc3, #c9bfa4) }
+    .time{ font-size:10px; color:#9aa4b2; min-width:64px; text-align:right }
+  </style>
+</head>
+<body>
+  <div class="shell" id="app">
+    <header>
+      <button class="hdrBtn" id="logout" type="button">Logout</button>
+      <div class="logo">AYBA</div>
+      <button class="hdrBtn" id="about" type="button">About</button>
+    </header>
+
+    <main class="feed" id="feed" aria-live="polite" aria-label="Posts feed"></main>
+
+    <section class="composer" id="composer" aria-label="Create post">
+      <div class="row">
+        <textarea id="text" class="ta" placeholder="Write something…"></textarea>
+        <input id="images" type="file" accept="image/*" multiple hidden />
+        <input id="audioFile" type="file" accept="audio/*" hidden />
+        <button class="btn" id="attach" type="button" title="Images" aria-label="Attach images">📷</button>
+        <button class="btn" id="mic" type="button" title="Record" aria-label="Record audio">🎙️</button>
+        <button class="btn" id="uploadAudio" type="button" title="Upload audio" aria-label="Upload audio">🎵</button>
+        <button class="btn" id="publish" type="button" aria-label="Publish" title="Publish"></button>
+      </div>
+      <div class="previews" id="previews"></div>
+      <div class="rec" id="rec">
+        <div class="dot"></div>
+        <span id="rectime">00:00</span>
+        <button class="btn" id="stop" type="button">■</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true">
+    <img alt="" />
+  </div>
+
+  <script>
+    // ===== Elements =====
+    const textEl = document.getElementById('text');
+    const imagesEl = document.getElementById('images');
+    const audioFileEl = document.getElementById('audioFile');
+    const attachBtn = document.getElementById('attach');
+    const micBtn = document.getElementById('mic');
+    const uploadAudioBtn = document.getElementById('uploadAudio');
+    const publishBtn = document.getElementById('publish');
+    const previews = document.getElementById('previews');
+    const feed = document.getElementById('feed');
+    const composer = document.getElementById('composer');
+    const recBar = document.getElementById('rec');
+    const stopBtn = document.getElementById('stop');
+    const rectime = document.getElementById('rectime');
+    const lightbox = document.getElementById('lightbox');
+
+    // ===== State =====
+    let selectedImages = [];
+    let recorder = null, recChunks = [], recStream = null, recTimer = null, recStart = 0;
+    let audioBlob = null; // recorded or uploaded
+
+    // ===== Helpers =====
+    function fmtTime(ts){ const d = new Date(ts); return d.toLocaleString('en-GB', {hour12:false}); }
+    function pad(n){ return n.toString().padStart(2,'0'); }
+
+    function startTimer(){
+      recStart = Date.now();
+      rectime.textContent = '00:00';
+      recTimer = setInterval(()=>{
+        const s = Math.floor((Date.now()-recStart)/1000);
+        const m = Math.floor(s/60), ss = s%60;
+        rectime.textContent = `${pad(m)}:${pad(ss)}`;
+      }, 500);
+    }
+    function stopTimer(){ clearInterval(recTimer); recTimer = null; }
+
+    function makeChip(imgURL, idx){
+      const chip = document.createElement('div'); chip.className = 'chip';
+      const img = document.createElement('img'); img.src = imgURL; img.alt = 'attachment';
+      const rm = document.createElement('button'); rm.className='x'; rm.textContent='x';
+      rm.onclick = ()=>{ selectedImages.splice(idx,1); renderPreviews(); };
+      chip.append(img, rm); return chip;
+    }
+
+    function renderPreviews(){
+      previews.innerHTML = '';
+      selectedImages.forEach((it, i)=> previews.appendChild(makeChip(it.url, i)) );
+      if(audioBlob){
+        const chip = document.createElement('div'); chip.className='chip';
+        const lab = document.createElement('span'); lab.textContent='🎧 Audio attached';
+        const rm = document.createElement('button'); rm.className='x'; rm.textContent='x'; rm.onclick=()=>{ audioBlob=null; chip.remove(); };
+        chip.append(lab, rm); previews.appendChild(chip);
+      }
+    }
+
+    function resetComposer(){
+      textEl.value = '';
+      imagesEl.value = '';
+      audioFileEl.value = '';
+      selectedImages.forEach(it=> { try{ URL.revokeObjectURL(it.url); }catch{} });
+      selectedImages = [];
+      audioBlob = null;
+      previews.innerHTML = '';
+      adjustBottomInset();
+    }
+
+    // ===== Post creation =====
+    function makePost({username, text, images, audio, time}){
+      const art = document.createElement('article'); art.className = 'post';
+      const head = document.createElement('div'); head.className='meta';
+      head.textContent = `${username} • ${fmtTime(time)}`;
+      art.appendChild(head);
+      if(text){ const p = document.createElement('p'); p.textContent = text; art.appendChild(p); }
+      if(images && images.length){
+        const grid = document.createElement('div'); grid.className = 'grid';
+        images.forEach(u=>{
+          const img = document.createElement('img'); img.src = u; img.alt='image';
+          img.addEventListener('click', ()=>{ openLightbox(u); document.body.style.overflow='hidden'; });
+          grid.appendChild(img);
+        });
+        art.appendChild(grid);
+      }
+      if(audio){ art.appendChild(createAudioCard(audio)); }
+      return art;
+    }
+
+    function createAudioCard(src){
+      const wrap = document.createElement('div'); wrap.className='audioCard';
+      const btn = document.createElement('button'); btn.className='audioBtn'; btn.type='button'; btn.textContent='▶';
+      const bar = document.createElement('div'); bar.className='bar';
+      const fill = document.createElement('div'); fill.className='fill'; bar.appendChild(fill);
+      const time = document.createElement('div'); time.className='time'; time.textContent='00:00 / 00:00';
+      const audio = new Audio(src); audio.preload = 'metadata';
+
+      function fmt(t){ if(!isFinite(t)) return '00:00'; const m=Math.floor(t/60), s=Math.floor(t%60); return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`; }
+      function update(){ const p=(audio.currentTime/(audio.duration||1))*100; fill.style.width=p+'%'; time.textContent=`${fmt(audio.currentTime)} / ${fmt(audio.duration)}`; }
+      audio.addEventListener('timeupdate', update);
+      audio.addEventListener('loadedmetadata', update);
+      audio.addEventListener('ended', ()=>{ btn.textContent='▶'; update(); });
+
+      btn.addEventListener('click', ()=>{ if(audio.paused){ audio.play(); btn.textContent='⏸'; } else { audio.pause(); btn.textContent='▶'; } });
+      bar.addEventListener('click', (e)=>{ const r=bar.getBoundingClientRect(); const ratio=(e.clientX-r.left)/r.width; audio.currentTime = ratio*(audio.duration||0); });
+
+      wrap.append(btn, bar, time); return wrap;
+    }
+
+    function openLightbox(url){
+      const img = lightbox.querySelector('img'); img.src = url; lightbox.style.display = 'flex';
+    }
+    lightbox.addEventListener('click', ()=>{ lightbox.style.display='none'; lightbox.querySelector('img').src=''; document.body.style.overflow=''; });
+
+    // ===== Image input =====
+    attachBtn.addEventListener('click', ()=> imagesEl.click());
+    imagesEl.addEventListener('change', (e)=>{
+      for(const file of e.target.files){
+        if(!file.type.startsWith('image/')) continue;
+        const url = URL.createObjectURL(file);
+        selectedImages.push({file, url});
+      }
+      imagesEl.value = '';
+      renderPreviews();
+    });
+
+    // ===== Audio upload fallback =====
+    uploadAudioBtn.addEventListener('click', ()=> audioFileEl.click());
+    audioFileEl.addEventListener('change', (e)=>{
+      const f = e.target.files && e.target.files[0];
+      if(!f) return; if(!f.type.startsWith('audio/')){ alert('Please choose an audio file.'); return; }
+      audioBlob = f; renderPreviews();
+    });
+
+    // ===== Recording =====
+    function micSupported(){ return !!(navigator.mediaDevices && window.MediaRecorder); }
+    function secure(){ return window.isSecureContext; }
+
+    async function startRec(){
+      if(!secure()){ alert('Recording needs HTTPS. Use the 🎵 upload.'); return; }
+      if(!micSupported()){ alert('Recorder not supported. Use the 🎵 upload.'); return; }
+      try{
+        recStream = await navigator.mediaDevices.getUserMedia({audio:true});
+      }catch(err){ console.error(err); alert('Mic permission denied. Use the 🎵 upload.'); return; }
+      try{
+        const mime = (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) ? 'audio/webm;codecs=opus' : undefined;
+        recorder = new MediaRecorder(recStream, mime ? {mimeType:mime} : undefined);
+      }catch(e){ alert('Recorder failed. Use the 🎵 upload.'); recStream.getTracks().forEach(t=>t.stop()); return; }
+
+      recChunks = [];
+      recorder.ondataavailable = e=> e.data && e.data.size && recChunks.push(e.data);
+      recorder.onstop = ()=>{ try{ audioBlob = new Blob(recChunks, {type: recChunks[0]?.type || 'audio/webm'}); }catch{ audioBlob=null; } renderPreviews(); };
+      recorder.start();
+      recBar.style.display='flex'; startTimer();
+    }
+    function stopRec(){ if(recorder && recorder.state!=='inactive') recorder.stop(); if(recStream){ recStream.getTracks().forEach(t=>t.stop()); recStream=null; } recorder=null; stopTimer(); recBar.style.display='none'; }
+
+    micBtn.addEventListener('click', ()=>{ (!recorder || recorder.state==='inactive') ? startRec() : stopRec(); });
+    stopBtn.addEventListener('click', stopRec);
+
+    // ===== Publish =====
+    publishBtn.addEventListener('click', ()=>{
+      try{
+        const text = textEl.value.trim();
+        const images = selectedImages.map(it=> it.url);
+        const audio = audioBlob ? URL.createObjectURL(audioBlob) : null;
+        if(!text && !images.length && !audio){ alert('Add text, image or audio first.'); return; }
+        const post = makePost({username:'System', text, images, audio, time:Date.now()});
+        feed.prepend(post);
+        resetComposer();
+        window.scrollTo({top:0, behavior:'smooth'});
+      }catch(e){ console.error('Publish failed:', e); alert('Publish failed due to a script error.'); }
+    });
+
+    // ===== Layout: keep feed above composer =====
+    function adjustBottomInset(){ const h = composer.offsetHeight || 0; feed.style.paddingBottom = (h + 12) + 'px'; }
+    new ResizeObserver(adjustBottomInset).observe(composer);
+    window.addEventListener('resize', adjustBottomInset);
+    window.addEventListener('orientationchange', adjustBottomInset);
+    adjustBottomInset();
+
+    // ===== Test cases (open with ?demo=1 to auto-seed) =====
+    function solidImageDataURL(color='#7aa4'){ const c=document.createElement('canvas'); c.width=240; c.height=160; const x=c.getContext('2d'); x.fillStyle=color; x.fillRect(0,0,c.width,c.height); x.fillStyle='#fff'; x.font='14px monospace'; x.fillText('AYBA', 10, 22); return c.toDataURL('image/png'); }
+    function beepWavDataURL(){
+      const sr=8000, dur=0.6, n=Math.floor(sr*dur), ch=1, bps=16; const buffer=new ArrayBuffer(44+n*2); const v=new DataView(buffer);
+      let p=0; function wStr(s){ for(let i=0;i<s.length;i++) v.setUint8(p++, s.charCodeAt(i)); }
+      function w32(u){ v.setUint32(p,u,true); } function w16(u){ v.setUint16(p,u,true); }
+      wStr('RIFF'); w32(36+n*2); wStr('WAVE'); wStr('fmt '); w32(16); w16(1); w16(ch); w32(sr); w32(sr*ch*bps/8); w16(ch*bps/8); w16(bps); wStr('data'); w32(n*2);
+      const amp=0.3; const f=440; for(let i=0;i<n;i++){ const t=i/sr; const s=Math.sin(2*Math.PI*f*t)*amp; v.setInt16(44+i*2, Math.max(-1,Math.min(1,s))*0x7FFF, true);} 
+      let bin=''; const bytes=new Uint8Array(buffer); for(let i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]);
+      return 'data:audio/wav;base64,'+btoa(bin);
+    }
+    function seedDemo(){
+      feed.appendChild(makePost({username:'System', text:'Welcome! This is a demo posts UI with text/images/audio.', images:[], audio:null, time:Date.now()}));
+      feed.appendChild(makePost({username:'Demo', text:'Image-only sample', images:[solidImageDataURL('#5566aa'), solidImageDataURL('#aa6655')], audio:null, time:Date.now()}));
+      feed.appendChild(makePost({username:'Demo', text:'Audio-only sample', images:[], audio:beepWavDataURL(), time:Date.now()}));
+    }
+    const params=new URLSearchParams(location.search); if(params.get('demo')==='1'){ seedDemo(); } else { feed.appendChild(makePost({username:'System', text:'Welcome! This is a demo posts UI with text/images/audio.', images:[], audio:null, time:Date.now()})); }
+  </script>
+</body>
+</html>
